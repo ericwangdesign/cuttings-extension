@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "Cuttings",
+  "version": "0.1.0",
+  "description": "Take a cutting from any page — the element, your sentence, and a clip if it moves — into the vault.",
+  "permissions": [
+    "activeTab",
+    "tabCapture",
+    "offscreen",
+    "scripting",
+    "storage",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Take a cutting  (⌥⇧C)"
+  },
+  "commands": {
+    "cut": {
+      "suggested_key": {
+        "default": "Alt+Shift+C"
+      },
+      "description": "Take a cutting — click for a still, shift-click to record"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

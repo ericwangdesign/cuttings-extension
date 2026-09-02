@@ -1,0 +1,82 @@
+<!doctype html><meta charset="utf-8"><title>Cuttings harness</title>
+<link rel="stylesheet" href="../content.css">
+<style>
+  html,body{margin:0;height:100%;background:#0d0d0d;color:#fff;font:16px/1.4 Inter,system-ui,sans-serif}
+  #art{position:absolute;inset:0;width:100%;height:100%}
+  /* the exact trap: a full-viewport transparent wrapper sitting on top of the artwork */
+  #glass{position:absolute;inset:0;background:transparent}
+  #band{position:absolute;left:0;right:0;top:60%;height:48px;background:transparent}
+  #card{position:absolute;left:80px;top:120px;width:360px;padding:24px;background:#141414;border-radius:12px;
+        box-shadow:0 12px 40px rgba(0,0,0,.5);transition:transform .42s cubic-bezier(.2,.8,.2,1)}
+  #card h1{margin:0 0 8px;font-size:42px;letter-spacing:-1.2px;color:#f0329a}
+  #card p{margin:0;font-size:15px;color:#9a9a9a}
+</style>
+<canvas id="art"></canvas>
+<!-- ?tall gives a long document with a sticky header, for full-height capture -->
+<script>if (location.search.includes('tall')) addEventListener('DOMContentLoaded', () => {
+  document.getElementById('art').style.display = 'none';
+  document.getElementById('glass').style.position = 'static';
+  const nav = document.createElement('div');
+  nav.id = 'sticky'; nav.textContent = 'sticky header';
+  nav.style.cssText = 'position:sticky;top:0;height:48px;background:#1b1b1b;color:#eee;padding:14px;z-index:5';
+  document.body.prepend(nav);
+  const long = document.createElement('div'); long.id = 'long';
+  long.style.cssText = 'padding:40px;display:flex;flex-direction:column;gap:28px';
+  for (let i = 0; i < 40; i++) {
+    const row = document.createElement('div');
+    row.style.cssText = 'height:120px;border-radius:8px;background:linear-gradient(90deg,#1a1a1a,#2a2a2a);color:#888;padding:12px';
+    row.textContent = 'row ' + (i + 1);
+    long.appendChild(row);
+  }
+  document.body.appendChild(long);
+});</script>
+<!-- ?light flips the fixture to a pale page, to check the overlay's contrast both ways -->
+<script>if (location.search.includes('light')) { document.documentElement.style.background = '#fbfbfa';
+  addEventListener('DOMContentLoaded', () => { document.body.style.background = '#fbfbfa';
+    document.getElementById('art').style.opacity = '.06';
+    const c = document.getElementById('card'); c.style.background = '#fff'; c.style.boxShadow = '0 12px 40px rgba(0,0,0,.10)';
+    c.querySelector('p').style.color = '#888'; }); }</script>
+<div id="glass">
+  <div id="band"></div>
+  <div id="card"><h1>We make the quiet parts loud</h1><p>A paragraph beneath the headline.</p></div>
+</div>
+<script>
+  // paint something so the canvas is not blank
+  const c = document.getElementById('art'), x = c.getContext('2d');
+  c.width = innerWidth * 2; c.height = innerHeight * 2;
+  x.fillStyle = '#0d0d0d'; x.fillRect(0,0,c.width,c.height);
+  for (let i=0;i<3000;i++){ x.fillStyle = i%7 ? 'rgba(255,255,255,.35)' : '#e8a33d';
+    x.fillRect(Math.random()*c.width, Math.random()*c.height, 2, 2); }
+</script>
+<script>
+  // Stub the extension surface so content.js runs unmodified in a plain page.
+  window.__sent = [];
+  window.chrome = {
+    runtime: {
+      id: 'harness',
+      lastError: null,
+      onMessage: { addListener: (f) => { window.__onMsg = f; } },
+      // Mirror the background: a still has no clip; a take returns one when it stops.
+      sendMessage: (m, cb) => { window.__sent.push(m);
+        if (!cb) return;
+        const reply = m.type === 'slice'      ? (window.__slices = (window.__slices || []).concat([{ sx: m.sx, sy: m.sy }]), { ok: true, n: window.__slices.length })
+                    : m.type === 'stitchFull' ? { id: 'full-1', clipSeconds: 0, slices: (window.__slices || []).length }
+                    : m.type === 'record'     ? { ok: true }
+                    : m.type === 'stopRecord' ? (m.discard ? { ok: true } : { id: 'take-1', clipSeconds: window.__took || 3 })
+                    : m.type === 'freeze'     ? { id: 'frozen-1', clipSeconds: 0 }
+                    : { ok: true };
+        setTimeout(() => cb(reply), 0);
+      },
+    },
+  };
+</script>
+<script src="../content.js"></script>
+<script>
+  // Drive it the way the background script would.
+  window.pick = () => window.__onMsg({ type: 'pick' }, null, () => {});
+  window.at = (x, y, type, mods) => document.dispatchEvent(new MouseEvent(type, Object.assign({ clientX: x, clientY: y, bubbles: true, cancelable: true }, mods)));
+  window.shiftClick = (x, y) => window.at(x, y, 'click', { shiftKey: true });
+  window.altClick = (x, y) => window.at(x, y, 'click', { altKey: true });
+  window.press = (key) => document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  window.boxLabel = () => document.querySelector('.ct-box')?.dataset.label ?? null;
+</script>

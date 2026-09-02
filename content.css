@@ -1,0 +1,127 @@
+/* Cuttings — overlay chrome. This sits on other people's pages, so it inherits nothing and can
+   assume nothing about the background: every surface carries its own contrast, and the selection
+   is drawn so it reads on white, on black, and on a photograph. */
+
+/* The selection: a pink ring with a dark halo (legible either way), a faint tint so the area
+   reads and not just the edge, and corner ticks so it looks like a selection rather than a
+   border that happens to be on the page. */
+.ct-box {
+  position: fixed; z-index: 2147483643; pointer-events: none;
+  background: rgba(240, 50, 154, .09);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, .5),
+    0 0 0 2px #f0329a,
+    0 0 0 3px rgba(0, 0, 0, .28),
+    0 0 0 100vmax rgba(8, 8, 8, .42);   /* the spotlight: one layer, so it can never seam */
+  transition: top .055s ease-out, left .055s ease-out, width .055s ease-out, height .055s ease-out;
+}
+.ct-c { position: absolute; width: 9px; height: 9px; pointer-events: none; }
+.ct-c::before, .ct-c::after { content: ""; position: absolute; background: #f0329a; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+.ct-c::before { width: 9px; height: 2px; }
+.ct-c::after  { width: 2px; height: 9px; }
+.ct-c.tl { top: -3px; left: -3px; }
+.ct-c.tr { top: -3px; right: -3px; }
+.ct-c.bl { bottom: -3px; left: -3px; }
+.ct-c.br { bottom: -3px; right: -3px; }
+.ct-c.tr::before, .ct-c.tr::after { right: 0; }
+.ct-c.bl::before, .ct-c.bl::after { bottom: 0; }
+.ct-c.br::before, .ct-c.br::after { right: 0; bottom: 0; }
+
+/* Shared surface for every floating piece: near-black, hairline-lit so it survives a dark page. */
+.ct-tag, .ct-card, .ct-toast, .ct-watch {
+  font: 500 12px/16px ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Inter, sans-serif;
+  letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  color: #f4f4f5; background: #101011;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .16), 0 8px 28px rgba(0, 0, 0, .45);
+}
+
+.ct-tag {
+  position: fixed; z-index: 2147483644; pointer-events: none;
+  padding: 7px 10px 8px; border-radius: 7px; white-space: nowrap;
+  transition: top .055s ease-out, left .055s ease-out;
+}
+.ct-tag .ct-row { display: flex; align-items: center; gap: 8px; }
+.ct-tag .ct-el { color: #fff; font-weight: 560; }
+.ct-tag .ct-dim { color: rgba(255, 255, 255, .45); }
+.ct-tag .ct-size { color: rgba(255, 255, 255, .72); }
+.ct-tag .ct-mode { display: inline-flex; align-items: center; gap: 5px; padding: 1px 7px 2px; border-radius: 999px;
+  background: rgba(255, 255, 255, .09); color: rgba(255, 255, 255, .6); font-size: 11px; }
+.ct-tag .ct-mode.on { background: rgba(240, 50, 154, .18); color: #ff7ac0; }
+.ct-tag .ct-mode i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; font-style: normal; }
+.ct-tag .ct-hint { margin-top: 5px; color: rgba(255, 255, 255, .38); font-size: 11px; font-weight: 460; }
+.ct-tag kbd { font: inherit; color: rgba(255, 255, 255, .62); }
+.ct-tag .ct-tall { color: rgba(255, 255, 255, .62); }
+
+/* Recording. Red rather than pink, because the difference between "this is selected" and "this is
+   being recorded" must not rest on a label. The ring breathes; the frame never moves. */
+.ct-box.ct-rec {
+  background: transparent;                 /* nothing inside the rect — it all lands in the video */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, .5),
+    0 0 0 3px #ff3b30,
+    0 0 0 5px rgba(255, 59, 48, .28),
+    0 0 0 100vmax rgba(8, 8, 8, .52);
+  animation: ct-breathe 1.5s ease-in-out infinite;
+}
+.ct-box.ct-rec .ct-c::before, .ct-box.ct-rec .ct-c::after { background: #ff3b30; }
+@keyframes ct-breathe {
+  50% { box-shadow:
+    0 0 0 1px rgba(0, 0, 0, .5),
+    0 0 0 3px #ff6259,
+    0 0 0 9px rgba(255, 59, 48, .16),
+    0 0 0 100vmax rgba(8, 8, 8, .52); }
+}
+.ct-rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff3b30; flex: none;
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, .25); animation: ct-pulse 1.5s ease-in-out infinite; }
+.ct-tag .ct-bar { margin-top: 6px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.ct-tag .ct-bar i { display: block; height: 100%; background: #ff3b30; transition: width .1s linear; }
+
+/* The sentence. One field, and everything else is a caption to it. */
+.ct-card {
+  position: fixed; z-index: 2147483647; width: 344px; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .16), 0 16px 48px rgba(0, 0, 0, .55);
+}
+.ct-card .ct-head { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 12px 0; color: rgba(255, 255, 255, .45); font-size: 11px; }
+.ct-card .ct-head .ct-el { color: rgba(255, 255, 255, .78); font-weight: 560;
+  max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-card input {
+  display: block; width: 100%; box-sizing: border-box; margin: 0; padding: 8px 12px 12px;
+  border: 0; background: transparent; color: #fff; outline: none;
+  font: 460 15px/21px ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Inter, sans-serif;
+  letter-spacing: -0.012em;
+}
+.ct-card input::placeholder { color: rgba(255, 255, 255, .3); }
+.ct-card .ct-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(255, 255, 255, .025); color: rgba(255, 255, 255, .38); font-size: 11px; }
+.ct-card .ct-mode { display: inline-flex; align-items: center; gap: 5px; color: rgba(255, 255, 255, .5); }
+.ct-card .ct-mode.on { color: #ff7ac0; }
+.ct-card .ct-mode i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; font-style: normal; }
+.ct-card kbd { font: inherit; color: rgba(255, 255, 255, .6); }
+
+.ct-toast {
+  position: fixed; z-index: 2147483647; left: 50%; bottom: 28px; transform: translateX(-50%);
+  padding: 9px 14px; border-radius: 999px; font-size: 12.5px;
+  animation: ct-in .16s cubic-bezier(.2, .8, .2, 1);
+}
+.ct-toast.ct-err { background: #f0329a; color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 8px 28px rgba(240,50,154,.35); }
+
+/* The other control's state, readable at a glance rather than an unlabelled dot. */
+.ct-watch {
+  position: fixed; z-index: 2147483645; top: 12px; right: 12px; pointer-events: none;
+  display: flex; align-items: center; gap: 6px; padding: 5px 10px 6px; border-radius: 999px;
+  color: #ff6259; animation: ct-in .16s cubic-bezier(.2, .8, .2, 1);
+}
+.ct-watch i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; font-style: normal;
+  animation: ct-pulse 1.8s ease-in-out infinite; }
+
+@keyframes ct-in { from { opacity: 0; transform: translateY(4px) translateX(var(--ct-x, 0)); } }
+@keyframes ct-pulse { 50% { opacity: .35; } }
+.ct-toast { --ct-x: -50%; }
+@media (prefers-reduced-motion: reduce) {
+  .ct-box, .ct-tag { transition: none; }
+  .ct-box.ct-rec, .ct-rec-dot { animation: none; }
+  .ct-toast, .ct-watch, .ct-watch i { animation: none; }
+}
