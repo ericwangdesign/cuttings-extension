@@ -55,7 +55,16 @@ node analyze.mjs ~/Pictures/some-photos --focus "the typography"
 
 The first reads every cutting filed under that folder; the second reads every image in a plain directory. `--focus` says what to look at (default: the building). It writes `guides/style-guide-<folder>.md` inside the directory: what nearly all of them share with counts like (9/12), proportions, materials, colours as hex, where they disagree, and a do/don't checklist.
 
-Needs Node 18+ and [Claude Code](https://claude.com/claude-code) signed in (`claude auth login`) — it runs through your own account, no API key. Around a minute per two or three pictures.
+Needs Node 18+ and one of these to do the looking — the first it finds wins, or pick with `--with`:
+
+| | |
+|---|---|
+| `GEMINI_API_KEY` | free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) · `--with gemini` |
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) · `--with anthropic` |
+| `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) · `--with openai` |
+| Claude Code, signed in | no key needed · `--with claude` |
+
+Swap models with `GEMINI_MODEL`, `ANTHROPIC_MODEL` or `OPENAI_MODEL`. Pictures too big for an API's limit are skipped with a note.
 
 ## Why
 
