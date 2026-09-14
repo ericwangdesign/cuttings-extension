@@ -6,11 +6,11 @@ that broke real captures: a transparent full-viewport wrapper (`#glass`) and a t
 (`#band`) sitting on top of the artwork, plus a card whose *ancestor* carries the transition.
 
     python3 -m http.server 5321 --directory "$(dirname "$0")/.."
-    open http://localhost:5321/test/
+    open http://localhost:5321/test/          # ?tall for a long page, ?site for a centred column (redlines), ?light for a pale page
 
 Then in the console:
 
-    pick()                        // as if ⌥⇧C
+    pick()                        // as if ⌥C
     at(640, 500, 'mousemove')     // over the transparent band
     boxLabel()                    // must be canvas#art, never div#band or div#glass
     press('ArrowUp')              // lift the selection to the parent

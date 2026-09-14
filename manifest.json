@@ -20,12 +20,16 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Take a cutting  (⌥⇧C)"
+    "default_title": "Take a cutting  (⌥C)"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   },
   "commands": {
     "cut": {
       "suggested_key": {
-        "default": "Alt+Shift+C"
+        "default": "Alt+C"
       },
       "description": "Take a cutting — click for a still, shift-click to record"
     }

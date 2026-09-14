@@ -1,0 +1,42 @@
+:root { color-scheme: light dark; }
+body {
+  margin: 0; padding: 56px 24px; background: #101011; color: #f4f4f5;
+  font: 460 14px/21px ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Inter, sans-serif;
+  letter-spacing: -0.01em; -webkit-font-smoothing: antialiased;
+}
+main { max-width: 520px; margin: 0 auto; }
+h1 { margin: 0 0 6px; font-size: 20px; font-weight: 560; letter-spacing: -0.02em; }
+h2 { margin: 36px 0 10px; font-size: 12px; font-weight: 560; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .04em; }
+.lede { margin: 0 0 28px; color: rgba(255,255,255,.6); }
+code, kbd { font: inherit; font-variant-numeric: tabular-nums; }
+code { color: rgba(255,255,255,.8); background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 4px; }
+kbd { color: #fff; background: rgba(255,255,255,.1); padding: 1px 6px 2px; border-radius: 4px; box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
+
+#pending { margin: 0 0 20px; padding: 12px 14px; border-radius: 8px; background: rgba(240,50,154,.12); box-shadow: 0 0 0 1px rgba(240,50,154,.35); }
+#pending p { margin: 0; }
+
+.choice { display: flex; flex-direction: column; gap: 8px; }
+.opt { display: flex; gap: 12px; padding: 14px 16px; border-radius: 10px; cursor: pointer;
+  background: rgba(255,255,255,.035); box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
+.opt:has(input:checked) { box-shadow: 0 0 0 1px #f0329a, 0 0 0 4px rgba(240,50,154,.14); }
+.opt input { margin: 4px 0 0; accent-color: #f0329a; }
+.opt .body { display: flex; flex-direction: column; gap: 4px; }
+.opt .name { font-weight: 560; }
+.opt .desc { color: rgba(255,255,255,.55); }
+.opt .row { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.dir { color: rgba(255,255,255,.75); font-variant-numeric: tabular-nums; }
+.dir:empty { display: none; }
+button {
+  font: inherit; font-weight: 560; color: #fff; background: rgba(255,255,255,.1);
+  border: 0; border-radius: 7px; padding: 6px 12px; cursor: pointer; box-shadow: 0 0 0 1px rgba(255,255,255,.1);
+}
+button:hover { background: rgba(255,255,255,.16); }
+#regrant { background: #f0329a; }
+
+.status { min-height: 21px; margin: 14px 0 0; color: rgba(255,255,255,.6); }
+.status.ok { color: #ff7ac0; }
+.status.err { color: #ff6259; }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }
+dt { text-align: right; white-space: nowrap; }
+dd { margin: 0; color: rgba(255,255,255,.7); }

@@ -30,6 +30,21 @@
   }
   document.body.appendChild(long);
 });</script>
+<!-- ?site is a centred column with headings, groups, rows and a grid — a portfolio, roughly — for redlines -->
+<script>if (location.search.includes('site')) addEventListener('DOMContentLoaded', () => {
+  document.getElementById('art').style.display = 'none';
+  document.getElementById('glass').style.display = 'none';
+  document.body.style.cssText = 'background:#0d0d0d;color:#ddd;padding:80px 0';
+  const main = document.createElement('main');
+  main.style.cssText = 'width:640px;margin:0 auto;display:flex;flex-direction:column;gap:96px';
+  const sec = (title, inner) => `<section style="display:flex;flex-direction:column;gap:12px"><h2 style="margin:0;font-size:16px;font-weight:500">${title}</h2>${inner}</section>`;
+  const group = (name, n) => `<div class="group" style="padding:0 0 8px;display:flex;flex-direction:column;gap:12px"><div style="color:#888">${name}</div><div class="rows">${Array.from({length:n},(_,i)=>`<div style="display:flex;justify-content:space-between;padding:12px 24px"><span>Project ${i+1}</span><span>2026</span></div>`).join('')}</div></div>`;
+  main.innerHTML =
+    sec('Eric Wang', `<div class="bio" style="display:flex;flex-direction:column;gap:12px"><p style="margin:0">A paragraph about work, long enough to wrap onto a second line in a column this wide.</p><p style="margin:0">Another one.</p></div>`) +
+    sec('Work', group('Google', 5) + group('Tesla', 2)) +
+    sec('Experiments', `<div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="col" style="height:320px;background:#161616"></div><div class="col" style="height:320px;background:#161616"></div></div>`);
+  document.body.appendChild(main);
+});</script>
 <!-- ?light flips the fixture to a pale page, to check the overlay's contrast both ways -->
 <script>if (location.search.includes('light')) { document.documentElement.style.background = '#fbfbfa';
   addEventListener('DOMContentLoaded', () => { document.body.style.background = '#fbfbfa';

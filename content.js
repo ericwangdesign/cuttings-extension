@@ -36,7 +36,7 @@
   /* ---------- measuring ---------- */
   const DEFAULTS = new Set(['none', 'normal', '0px', 'auto', 'rgba(0, 0, 0, 0)', 'transparent', 'all 0s ease 0s', 'all', 'visible', 'static', '0s']);
   const KEYS = ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'text-transform', 'color', 'background-color', 'background-image',
-    'border-radius', 'padding', 'gap', 'opacity', 'transform', 'transition', 'animation', 'mix-blend-mode', 'backdrop-filter', 'box-shadow', 'filter', 'clip-path'];
+    'border-radius', 'padding', 'margin', 'gap', 'opacity', 'transform', 'transition', 'animation', 'mix-blend-mode', 'backdrop-filter', 'box-shadow', 'filter', 'clip-path'];
 
   const hex = (c) => {
     const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(c);
@@ -96,6 +96,30 @@
     };
   }
 
+  // The live readout on the hover tag: type on one line, spacing on the next. Reads off every
+  // element as the cursor moves, so the picker doubles as an inspector even when nothing is cut.
+  const px = (v) => v.replace(/px/g, '').replace(/(^|\s)0(?=\s|$)/g, '$10').trim();
+  const allZero = (v) => /^(0px\s*)+$/.test(v);
+  function readout(el) {
+    const s = getComputedStyle(el);
+    const lines = [];
+    const hasText = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) || (el.innerText || '').trim();
+    if (hasText) {
+      const fam = s.fontFamily.split(',')[0].replace(/["']/g, '').trim();
+      const lh = s.lineHeight === 'normal' ? '' : '/' + px(s.lineHeight);
+      const ls = s.letterSpacing === 'normal' ? '' : ' · ' + px(s.letterSpacing) + 'px';
+      const tt = s.textTransform !== 'none' ? ' · ' + s.textTransform : '';
+      lines.push(`<span class="ct-type">${esc(fam)} ${s.fontWeight} · ${px(s.fontSize)}${lh}${ls}${tt}</span>`);
+    }
+    const sp = [];
+    if (!allZero(s.padding)) sp.push(`pad ${px(s.padding)}`);
+    if (!allZero(s.margin)) sp.push(`mar ${px(s.margin)}`);
+    if (s.gap && s.gap !== 'normal' && !allZero(s.gap)) sp.push(`gap ${px(s.gap)}`);
+    if (!allZero(s.borderRadius)) sp.push(`r ${px(s.borderRadius)}`);
+    if (sp.length) lines.push(`<span class="ct-space">${esc(sp.join(' · '))}</span>`);
+    return lines.map((l) => `<div class="ct-read">${l}</div>`).join('');
+  }
+
   /* ---------- picker ---------- */
   // elementFromPoint returns whatever is topmost, which on a layered site is usually an invisible
   // wrapper — you aim at the artwork and select the sheet of glass in front of it. So walk the whole
@@ -140,9 +164,11 @@
         `<span class="ct-size">${Math.round(r.width)} × ${Math.round(r.height)}</span>` +
         (lift ? `<span class="ct-dim">↑${lift}</span>` : '') +
       `</div>` +
+      readout(el) +
       (tall ? `<div class="ct-hint ct-tall">${Math.round(fullH)}px tall · ${Math.ceil(fullH / innerHeight)} screens — <kbd>⌥click</kbd> takes all of it</div>` : '') +
       `<div class="ct-hint">${canLift ? '<kbd>↑</kbd><kbd>↓</kbd> adjust · ' : ''}` +
-        `<kbd>click</kbd> still · <kbd>⇧click</kbd> record${tall ? ' · <kbd>⌥click</kbd> full' : ''} · <kbd>esc</kbd> cancel</div>`;
+        `<kbd>click</kbd> still · <kbd>⇧click</kbd> record${tall ? ' · <kbd>⌥click</kbd> full' : ''} · ` +
+        `<kbd>R</kbd> ${redlines ? '<span class="ct-on">redlines</span>' : 'redlines'} · <kbd>C</kbd> copy · <kbd>esc</kbd> cancel</div>`;
 
     // Prefer above the selection; drop below when there's no room, and never run off an edge.
     const tw = tag.offsetWidth || 260, th = tag.offsetHeight || 40;
@@ -154,7 +180,9 @@
     if (!alive()) { retire(); return; }
     if (recording) return;                       // the frame is committed; hovering must not move it
     const stack = document.elementsFromPoint(e.clientX, e.clientY).filter((el) => !mine(el));
-    const found = stack.find(paints) || stack[0];
+    // body and html paint on most sites (a background colour), and are never what the cursor meant.
+    const root = (el) => el === document.body || el === document.documentElement;
+    const found = stack.find((el) => paints(el) && !root(el)) || stack[0];
     if (!found || found === base) return;
     base = found; lift = 0;
     paint();
@@ -166,6 +194,14 @@
       return;
     }
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); stop(); return; }
+    if ((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault(); e.stopPropagation(); setRedlines(!redlines); return;
+    }
+    if ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const el = current || resolve();
+      if (el) { e.preventDefault(); e.stopPropagation(); copyAddress(el); }
+      return;
+    }
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault(); e.stopPropagation();
       const max = (() => { let n = 0, el = base; while (el?.parentElement) { n++; el = el.parentElement; } return n; })();
@@ -221,6 +257,7 @@
   function stop() {
     if (!picking) return;
     picking = false;
+    setRedlines(false);
     if (recTick) { clearInterval(recTick); recTick = null; }
     box?.remove(); box = null;
     tag?.remove(); tag = null;
@@ -228,6 +265,160 @@
     removeEventListener('mousemove', move, true);
     removeEventListener('click', click, true);
     removeEventListener('keydown', key, true);
+  }
+
+  /* ---------- copy the address ---------- */
+  // `C` copies where the hovered element lives, for pasting into a chat: a selector path from the
+  // nearest id (or main) down, with :nth-of-type where siblings would otherwise be identical, plus
+  // the first few words so a human can check it's the right one. Enough for "change the padding on
+  // this" without a screenshot.
+  function pathTo(el) {
+    const parts = [];
+    let n = el, depth = 0;
+    while (n && n !== document.body && n !== document.documentElement && depth < 6) {
+      let part = n.tagName.toLowerCase();
+      if (n.id) { parts.unshift(part + '#' + n.id); break; }
+      const cls = [...n.classList].filter((c) => !c.startsWith('ct-')).slice(0, 2);
+      if (cls.length) part += '.' + cls.join('.');
+      const p = n.parentElement;
+      if (p) {
+        const same = [...p.children].filter((s) => s.tagName === n.tagName && cls.every((c) => s.classList.contains(c)));
+        if (same.length > 1) part += `:nth-of-type(${[...p.children].filter((s) => s.tagName === n.tagName).indexOf(n) + 1})`;
+      }
+      parts.unshift(part);
+      if (part === 'main') break;
+      n = p; depth++;
+    }
+    return parts.join(' > ') || el.tagName.toLowerCase();
+  }
+  function copyAddress(el) {
+    const words = (el.innerText || el.getAttribute('alt') || '').trim().replace(/\s+/g, ' ').slice(0, 48);
+    const text = pathTo(el) + (words ? `  — "${words}${words.length === 48 ? '…' : ''}"` : '');
+    const done = () => toast('Copied ' + pathTo(el));
+    const fallback = () => {
+      const ta = document.createElement('textarea'); ta.value = text; ta.className = 'ct-clip';
+      document.documentElement.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch { toast('Could not copy', true); }
+      ta.remove();
+    };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  }
+
+  /* ---------- redlines ---------- */
+  // `R` in the picker stops selecting one thing and annotates everything: every layout block
+  // gets a hairline box, a dashed inset where its padding is, and a label with x · width · pad ·
+  // gap. Which blocks count is the whole problem: walk down from the page's real container, keep
+  // things that are laid out as blocks and are big enough to be layout rather than a word, and
+  // only descend into a block that carries no text of its own — a paragraph is a leaf, a column
+  // isn't. Capped so a 3,000-node page stays a few hundred boxes.
+  let redlines = false, redLayer = null, redTick = 0;
+  const RED_DEPTH = 2, RED_MAX = 160, RED_MIN = 40;   // two levels: sections and what's directly in them. Three was rows inside groups inside sections — too many boxes.
+
+  function ownText(el) {
+    for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) return true;
+    return false;
+  }
+  function blockish(el) {
+    if (mine(el) || /^(SCRIPT|STYLE|SVG|PATH|BR|WBR|NOSCRIPT|TEMPLATE)$/.test(el.tagName)) return false;
+    const s = getComputedStyle(el);
+    if (s.display === 'inline' || s.display === 'none' || s.display === 'contents' || s.visibility === 'hidden') return false;
+    if (+s.opacity === 0) return false;
+    const r = el.getBoundingClientRect();
+    return r.width >= RED_MIN && r.height >= RED_MIN;
+  }
+  // body → the first descendant that actually fans out. Sites wrap everything in two or three
+  // single-child divs before anything happens; boxing those is noise.
+  function pageRoot() {
+    let el = document.querySelector('main') || document.body;
+    for (let i = 0; i < 6; i++) {
+      const kids = [...el.children].filter(blockish);
+      if (kids.length !== 1) break;
+      el = kids[0];
+    }
+    return el;
+  }
+  function sections() {
+    const out = [];
+    const walk = (el, depth) => {
+      for (const kid of el.children) {
+        if (out.length >= RED_MAX) return;
+        if (!blockish(kid)) continue;
+        out.push({ el: kid, depth });
+        if (depth < RED_DEPTH && !ownText(kid)) walk(kid, depth + 1);
+      }
+    };
+    walk(pageRoot(), 1);
+    return out;
+  }
+  function redLabel(el, r) {
+    const s = getComputedStyle(el);
+    const bits = [`x ${Math.round(r.left + scrollX)}`, `w ${Math.round(r.width)}`];
+    if (!allZero(s.padding)) bits.push(`pad ${px(s.padding)}`);
+    if (s.gap && s.gap !== 'normal' && !allZero(s.gap)) bits.push(`gap ${px(s.gap)}`);
+    return `<b>${esc(label(el))}</b>${bits.map((b) => `<span>${esc(b)}</span>`).join('')}`;
+  }
+  function drawRedlines() {
+    if (!redLayer) return;
+    redLayer.textContent = '';
+    const placed = [];   // label rects already on screen, so the next one can step out of the way
+    for (const { el, depth } of sections()) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) continue;
+      const s = getComputedStyle(el);
+      const b = document.createElement('div');
+      b.className = 'ct-rb ct-d' + depth;
+      Object.assign(b.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+      const pt = parseFloat(s.paddingTop), pr = parseFloat(s.paddingRight), pb = parseFloat(s.paddingBottom), pl = parseFloat(s.paddingLeft);
+      if (pt || pr || pb || pl) {
+        const p = document.createElement('i');
+        p.className = 'ct-rp';
+        Object.assign(p.style, { top: pt + 'px', right: pr + 'px', bottom: pb + 'px', left: pl + 'px' });
+        b.appendChild(p);
+      }
+      const l = document.createElement('div');
+      l.className = 'ct-rl'; l.innerHTML = redLabel(el, r);
+      redLayer.appendChild(b); redLayer.appendChild(l);
+      // Labels go in the margin, not on the page. Most sites leave a column of nothing to the left
+      // of the content, and a label there can never cover a word; it sits level with the box's top
+      // edge with a tick pointing in. Nested blocks share that edge, so labels stack downwards
+      // against the ones already placed. Only when there's no margin does it fall back to sitting
+      // just above the box, and inside the top-left corner when there's no room above either.
+      const lw = l.offsetWidth, lh = 16;
+      let lx, ly = r.top;
+      if (r.left >= lw + 14) { lx = r.left - lw - 10; l.classList.add('ct-out'); }
+      else { lx = Math.min(Math.max(2, r.left), innerWidth - lw - 2); ly = r.top - 18 >= 2 ? r.top - 18 : r.top + 2; }
+      for (let tries = 0; tries < 8; tries++) {
+        const hit = placed.find((q) => lx < q.x + q.w && lx + lw > q.x && ly < q.y + q.h && ly + lh > q.y);
+        if (!hit) break;
+        ly = hit.y + hit.h + 3;
+      }
+      placed.push({ x: lx, y: ly, w: lw, h: lh });
+      Object.assign(l.style, { left: lx + 'px', top: ly + 'px' });
+    }
+  }
+  function redSchedule() {
+    if (redTick) return;
+    redTick = requestAnimationFrame(() => { redTick = 0; drawRedlines(); });
+  }
+  function setRedlines(on) {
+    if (on === redlines) return;
+    redlines = on;
+    if (on) {
+      redLayer = document.createElement('div'); redLayer.className = 'ct-red';
+      document.documentElement.appendChild(redLayer);
+      if (box) box.classList.add('ct-hide');
+      addEventListener('scroll', redSchedule, true);
+      addEventListener('resize', redSchedule);
+      drawRedlines();
+    } else {
+      redLayer?.remove(); redLayer = null;
+      if (redTick) { cancelAnimationFrame(redTick); redTick = 0; }
+      if (box) box.classList.remove('ct-hide');
+      removeEventListener('scroll', redSchedule, true);
+      removeEventListener('resize', redSchedule);
+    }
+    if (current) paint();
   }
 
   /* ---------- full height ---------- */
@@ -425,7 +616,9 @@
         const note = input.value.trim();
         close();
         send({ type: 'save', id: frozen.id, note, measure: m, page: { url: location.href, title: document.title } }, (res) => {
-          if (!res || res.error) toast(res?.error || 'Not saved', true); else toast(note ? 'Cut.' : 'Cut, unsaid.');
+          if (!res || res.error) toast(res?.error || 'Not saved', true);
+          else if (res.parked) toast('Choose a folder in the tab that opened — the cutting is waiting');
+          else toast(note ? 'Cut.' : 'Cut, unsaid.');
         });
       }
     });

@@ -1,6 +1,7 @@
-// Cuttings — service worker. Owns the two hotkeys, the screenshot, and the trip to the vault.
-const VAULT = 'http://localhost:4700';
+// Cuttings — service worker. Owns the hotkey, the screenshot, and where the cutting lands.
+import { save } from './sink.js';
 const pending = new Map(); // id → { still, viewport, clip }
+const parked = new Map();  // id → the whole cutting, waiting for a folder to be chosen
 let seq = 0;
 
 const log = (...a) => console.log('[cuttings]', ...a);
@@ -73,7 +74,7 @@ const watching = async (tabId) => (await ask({ type: 'status', tabId }))?.watchi
 // "Extension has not been invoked for the current page". So the handler claims the stream up front
 // and passes the pending handle down.
 // The stream handle must be claimed while the keypress is still live, but the take doesn't begin
-// until ⇧click — so the handle is claimed on ⌥⇧C and held for the tab until it's used or replaced.
+// until ⇧click — so the handle is claimed on ⌥C and held for the tab until it's used or replaced.
 const handles = new Map();   // tabId → { id, p }
 let lastTabId = null;
 chrome.tabs.onActivated.addListener(({ tabId }) => { lastTabId = tabId; });
@@ -87,8 +88,8 @@ function claimStream(tab) {
 
 async function beginTake(tabId, rect, vw) {
   const h = handles.get(tabId);
-  if (!h) throw new Error('no capture handle — press ⌥⇧C again on this tab');
-  if (h.id !== tabId) throw new Error('that handle belonged to another tab — press ⌥⇧C again');
+  if (!h) throw new Error('no capture handle — press ⌥C again on this tab');
+  if (h.id !== tabId) throw new Error('that handle belonged to another tab — press ⌥C again');
   const streamId = await h.p;
   if (streamId?.err) { handles.delete(tabId); throw new Error(streamId.err); }
   const res = await ask({ type: 'start', tabId, streamId, rect, vw });
@@ -98,7 +99,7 @@ async function beginTake(tabId, rect, vw) {
 }
 
 /* ---------- commands ---------- */
-// Two controls, two meanings. ⌥⇧C takes a still; ⌥⇧M arms the buffer. Cutting used to arm the
+// Two controls, two meanings. ⌥C takes a still; ⌥⇧M arms the buffer. Cutting used to arm the
 // buffer behind your back so motion was "just there" — but that collapsed both keys into one
 // implicit behaviour, and you could no longer tell what a cut would produce before taking it.
 // Motion is now only ever recorded because you asked for it.
@@ -297,13 +298,28 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     (async () => {
       const p = pending.get(msg.id); pending.delete(msg.id);
       if (!p) throw new Error('That moment is gone');
-      const r = await fetch(VAULT + '/cuttings', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...p, note: msg.note, page: p.page || msg.page, measure: p.measure || msg.measure }),
-      });
-      if (!r.ok) throw new Error(await r.text());
-      reply(await r.json());
-    })().catch((e) => reply({ error: e.message.includes('Failed to fetch') ? 'Vault reader isn’t running (localhost:4700)' : e.message }));
+      const c = { ...p, note: msg.note, page: p.page || msg.page, measure: p.measure || msg.measure };
+      try { reply(await save(c)); }
+      catch (e) {
+        if (!e.needsFolder) throw e;
+        // No folder yet, or its permission lapsed with the browser restart. Neither can be fixed
+        // from here — a picker needs a page and a gesture — so park the cutting and open the one
+        // page that has both. It finishes the save.
+        parked.set(msg.id, c);
+        chrome.tabs.create({ url: chrome.runtime.getURL('options.html?resume=' + encodeURIComponent(msg.id)) });
+        reply({ parked: true, message: e.message });
+      }
+    })().catch((e) => reply({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'saveParked') {
+    (async () => {
+      const c = parked.get(msg.id);
+      if (!c) throw new Error('That cutting is gone — the worker was restarted');
+      const res = await save(c);
+      parked.delete(msg.id);
+      reply(res);
+    })().catch((e) => reply({ error: e.message }));
     return true;
   }
 });

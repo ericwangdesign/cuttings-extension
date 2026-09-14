@@ -1,0 +1,51 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Cuttings</title>
+<link rel="stylesheet" href="options.css">
+<main>
+  <h1>Cuttings</h1>
+  <p class="lede">Where a cutting lands. A markdown note with the still, the clip and the numbers beside it.</p>
+
+  <section id="pending" hidden>
+    <p><b>One cutting is waiting.</b> It's saved the moment a folder is chosen.</p>
+  </section>
+
+  <section class="choice">
+    <label class="opt">
+      <input type="radio" name="sink" value="folder">
+      <span class="body">
+        <span class="name">A folder</span>
+        <span class="desc">Each cutting is a <code>.md</code> plus a folder of pixels. Any notes app that reads markdown will show them.</span>
+        <span class="row">
+          <button id="choose" type="button">Choose folder…</button>
+          <span id="dir" class="dir"></span>
+          <button id="regrant" type="button" hidden>Allow access again</button>
+        </span>
+      </span>
+    </label>
+    <label class="opt">
+      <input type="radio" name="sink" value="vault">
+      <span class="body">
+        <span class="name">The vault reader</span>
+        <span class="desc">Posts to <code>localhost:4700</code>. Only if you run one.</span>
+      </span>
+    </label>
+  </section>
+
+  <p id="status" class="status"></p>
+
+  <section class="keys">
+    <h2>Keys</h2>
+    <dl>
+      <dt><kbd>⌥C</kbd></dt><dd>start — the cursor becomes a crosshair, hovering reads the type and spacing</dd>
+      <dt><kbd>click</kbd></dt><dd>still</dd>
+      <dt><kbd>⇧click</kbd></dt><dd>record that element; <kbd>⇧click</kbd> or <kbd>⏎</kbd> stops</dd>
+      <dt><kbd>⌥click</kbd></dt><dd>the whole thing, taller than the screen</dd>
+      <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>lift the selection to the parent, and back</dd>
+      <dt><kbd>R</kbd></dt><dd>redlines — every block boxed, with its x, width, padding, gap</dd>
+      <dt><kbd>C</kbd></dt><dd>copy the element's address, for pasting into a chat</dd>
+      <dt><kbd>esc</kbd></dt><dd>leave</dd>
+    </dl>
+  </section>
+</main>
+<script type="module" src="options.js"></script>
