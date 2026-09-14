@@ -113,13 +113,18 @@
   padding: 9px 12px 0; color: rgba(255, 255, 255, .45); font-size: 11px; }
 .ct-card .ct-head .ct-el { color: rgba(255, 255, 255, .78); font-weight: 560;
   max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ct-card input {
+.ct-card input.ct-note {
   display: block; width: 100%; box-sizing: border-box; margin: 0; padding: 8px 12px 12px;
   border: 0; background: transparent; color: #fff; outline: none;
   font: 460 15px/21px ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Inter, sans-serif;
   letter-spacing: -0.012em;
 }
 .ct-card input::placeholder { color: rgba(255, 255, 255, .3); }
+.ct-card .ct-fold { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0 12px 10px; color: rgba(255, 255, 255, .38); font-size: 11px; cursor: text; }
+.ct-card .ct-fold input { flex: 1; min-width: 0; margin: 0; padding: 3px 7px; border: 0; border-radius: 5px; outline: none;
+  background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .85);
+  font: 500 12px/16px ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Inter, sans-serif; }
+.ct-card .ct-fold input:focus { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
 .ct-card .ct-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, .09);
   background: rgba(255, 255, 255, .025); color: rgba(255, 255, 255, .38); font-size: 11px; }

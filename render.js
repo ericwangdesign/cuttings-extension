@@ -5,11 +5,12 @@
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
 const site = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return 'page'; } };
+const folderName = (s) => String(s || '').replace(/[\n\r"]/g, '').trim().slice(0, 60);
 const q = (s) => '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
 // A long-page capture comes back as JPEG, an element as PNG — keep the real extension either way.
 const ext = (d) => (/^data:image\/jpe?g/.test(d) ? 'jpg' : /^data:video/.test(d) ? 'webm' : 'png');
 
-// c: { note, page: { url, title }, measure, still, viewport, clip, seconds } — data URLs for the
+// c: { note, folder, page: { url, title }, measure, still, viewport, clip, seconds } — data URLs for the
 // pixels. Returns the files to write, paths relative to the cuttings folder: the note as text,
 // the pixels still as data URLs for whoever writes them to turn into bytes.
 export function renderCutting(c, now = new Date()) {
@@ -66,6 +67,7 @@ export function renderCutting(c, now = new Date()) {
     '  type: cutting',
     `source: ${q(c.page?.url || '')}`,
     `site: ${host}`,
+    folderName(c.folder) ? `folder: ${q(folderName(c.folder))}` : null,
     assets.still ? `still: ${assets.still}` : null,
     assets.viewport ? `viewport: ${assets.viewport}` : null,
     assets.clip ? `clip: ${assets.clip}` : null,

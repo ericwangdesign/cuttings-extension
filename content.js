@@ -592,36 +592,46 @@
     card.innerHTML =
       `<div class="ct-head"><span class="ct-el">${esc(m.element)}</span>` +
         `<span>${Math.round(m.rect.w)} × ${Math.round(m.rect.h)}</span></div>` +
-      `<input type="text" placeholder="What did you notice?" autocomplete="off" spellcheck="false">` +
+      `<input class="ct-note" type="text" placeholder="What did you notice?" autocomplete="off" spellcheck="false">` +
+      `<label class="ct-fold"><span>folder</span><input class="ct-folder" type="text" placeholder="none" autocomplete="off" spellcheck="false"></label>` +
       `<div class="ct-foot">` +
         `<span class="ct-mode${on ? ' on' : ''}">${on ? `still + ${frozen.clipSeconds}s of motion`
           : frozen.slices > 1 ? `full height · ${frozen.slices} screens` : 'still only'}</span>` +
-        `<span><kbd>⏎</kbd> save · <kbd>esc</kbd> discard</span>` +
+        `<span><kbd>tab</kbd> folder · <kbd>⏎</kbd> save</span>` +
       `</div>`;
     // Sit clear of the selection, not on top of it — you should still be able to see the thing
     // you're describing. Below it by preference, above when there's no room, cursor as last resort.
-    const w = 344, h = 108, gap = 10, r = m.rect;
+    const w = 344, h = 140, gap = 10, r = m.rect;
     const below = r.y + r.h + gap, above = r.y - h - gap;
     card.style.top = (below + h < innerHeight - 8 ? below : above > 8 ? above
       : Math.max(8, Math.min(innerHeight - h - 8, at.y + 12))) + 'px';
     card.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.x)) + 'px';
     document.documentElement.appendChild(card);
-    const input = card.querySelector('input');
+    const input = card.querySelector('.ct-note');
+    const folderIn = card.querySelector('.ct-folder');
     input.focus();
+    // The folder sticks: a run of cuttings for one reference set is the common case, so the last
+    // one is filled in and Tab reaches it. Stored by the extension, not the page, so it follows you.
+    chrome.storage?.local.get('lastFolder').then((r) => { if (card && !folderIn.value) folderIn.value = r?.lastFolder || ''; }).catch(() => {});
     const close = () => { card?.remove(); card = null; };
-    input.addEventListener('keydown', (e) => {
+    const onKey = (e) => {
       e.stopPropagation();
+      if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === input ? folderIn : input).focus(); }
       if (e.key === 'Escape') { close(); send({ type: 'discard', id: frozen.id }); }
       if (e.key === 'Enter') {
         const note = input.value.trim();
+        const folder = folderIn.value.trim();
+        try { chrome.storage?.local.set({ lastFolder: folder }); } catch {}
         close();
-        send({ type: 'save', id: frozen.id, note, measure: m, page: { url: location.href, title: document.title } }, (res) => {
+        send({ type: 'save', id: frozen.id, note, folder, measure: m, page: { url: location.href, title: document.title } }, (res) => {
           if (!res || res.error) toast(res?.error || 'Not saved', true);
           else if (res.parked) toast('Choose a folder in the tab that opened — the cutting is waiting');
-          else toast(note ? 'Cut.' : 'Cut, unsaid.');
+          else toast((note ? 'Cut' : 'Cut, unsaid') + (folder ? ' → ' + folder : '.'));
         });
       }
-    });
+    };
+    input.addEventListener('keydown', onKey);
+    folderIn.addEventListener('keydown', onKey);
     card.addEventListener('mousedown', (e) => e.stopPropagation());
   }
 

@@ -21,6 +21,7 @@ Works in Chrome, Arc, Dia, Brave — anything Chromium.
 | **⌥C** | start — the cursor becomes a crosshair, hovering reads the type and spacing off every element |
 | **click** | a still |
 | **⇧click** | record that element — **⇧click** or **⏎** stops, 20s cap |
+| **tab** | on the note card: the folder field. It remembers the last one. |
 | **⌥click** | the whole thing, taller than the screen |
 | **↑ ↓** | lift the selection to the parent, and back |
 | **R** | redlines — every block boxed with its x, width, padding, gap |
@@ -41,6 +42,25 @@ cuttings/
 
 The `.md` has your sentence as the title, the source, and a **Measured** section: element and size, type, palette, motion, computed styles. Obsidian, iA Writer, or any folder-of-markdown reader shows it as a note with the image inline.
 
+## Folders and style guides
+
+Type a folder on the note card (Tab gets there) and the cutting is filed under it — a `folder:` line in the note, the files never move.
+
+Then read a whole folder as one set and get a style guide of what the pictures share:
+
+```
+node analyze.mjs ~/path/to/cuttings "brick houses"
+node analyze.mjs ~/Pictures/some-photos --focus "the typography"
+```
+
+The first reads every cutting filed under that folder; the second reads every image in a plain directory. `--focus` says what to look at (default: the building). It writes `guides/style-guide-<folder>.md` inside the directory: what nearly all of them share with counts like (9/12), proportions, materials, colours as hex, where they disagree, and a do/don't checklist.
+
+Needs Node 18+ and [Claude Code](https://claude.com/claude-code) signed in (`claude auth login`) — it runs through your own account, no API key. Around a minute per two or three pictures.
+
 ## Why
 
 Inspiration libraries collect beautifully and let you say nothing. Annotation tools are for feedback on your own site. Nothing collects *a fragment of someone else's page plus the reason you noticed it* — so this does. A cutting is a piece taken from someone else's plant to grow your own.
+
+## License
+
+MIT — take it and make it yours.

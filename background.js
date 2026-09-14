@@ -298,7 +298,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     (async () => {
       const p = pending.get(msg.id); pending.delete(msg.id);
       if (!p) throw new Error('That moment is gone');
-      const c = { ...p, note: msg.note, page: p.page || msg.page, measure: p.measure || msg.measure };
+      const c = { ...p, note: msg.note, folder: msg.folder, page: p.page || msg.page, measure: p.measure || msg.measure };
       try { reply(await save(c)); }
       catch (e) {
         if (!e.needsFolder) throw e;
