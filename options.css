@@ -12,14 +12,14 @@ code, kbd { font: inherit; font-variant-numeric: tabular-nums; }
 code { color: rgba(255,255,255,.8); background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 4px; }
 kbd { color: #fff; background: rgba(255,255,255,.1); padding: 1px 6px 2px; border-radius: 4px; box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
 
-#pending { margin: 0 0 20px; padding: 12px 14px; border-radius: 8px; background: rgba(240,50,154,.12); box-shadow: 0 0 0 1px rgba(240,50,154,.35); }
+#pending { margin: 0 0 20px; padding: 12px 14px; border-radius: 8px; background: rgba(77,166,255,.12); }
 #pending p { margin: 0; }
 
 .choice { display: flex; flex-direction: column; gap: 8px; }
 .opt { display: flex; gap: 12px; padding: 14px 16px; border-radius: 10px; cursor: pointer;
   background: rgba(255,255,255,.035); box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
-.opt:has(input:checked) { box-shadow: 0 0 0 1px #f0329a, 0 0 0 4px rgba(240,50,154,.14); }
-.opt input { margin: 4px 0 0; accent-color: #f0329a; }
+.opt:has(input:checked) { background: rgba(77,166,255,.14); }
+.opt input { margin: 4px 0 0; accent-color: #4da6ff; }
 .opt .body { display: flex; flex-direction: column; gap: 4px; }
 .opt .name { font-weight: 560; }
 .opt .desc { color: rgba(255,255,255,.55); }
@@ -31,10 +31,10 @@ button {
   border: 0; border-radius: 7px; padding: 6px 12px; cursor: pointer; box-shadow: 0 0 0 1px rgba(255,255,255,.1);
 }
 button:hover { background: rgba(255,255,255,.16); }
-#regrant { background: #f0329a; }
+#regrant { background: rgba(77,166,255,.24); color: #4da6ff; }
 
 .status { min-height: 21px; margin: 14px 0 0; color: rgba(255,255,255,.6); }
-.status.ok { color: #ff7ac0; }
+.status.ok { color: #4da6ff; }
 .status.err { color: #ff6259; }
 
 dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }

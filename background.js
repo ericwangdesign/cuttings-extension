@@ -25,7 +25,7 @@ async function badge(tabId, text, color) {
 async function say(tabId, text, err) {
   log(err ? 'ERROR:' : '·', text);
   if (await tell(tabId, { type: 'toast', text, err })) return;
-  if (err) { badge(tabId, '!', '#f0329a'); chrome.action.setTitle({ tabId, title: 'Cuttings — ' + text }).catch(() => {}); }
+  if (err) { badge(tabId, '!', '#ff453a'); chrome.action.setTitle({ tabId, title: 'Cuttings — ' + text }).catch(() => {}); }
 }
 
 async function ensureContent(tabId) {
@@ -144,7 +144,7 @@ async function run(cmd, tab, stream) {
   // Bail only when the URL is positively known to be uncapturable. An empty url means the tab just
   // hasn't told us yet — press on and let the real call produce a real error, rather than nothing.
   const url = tab.url || '';
-  if (url && !/^https?:/.test(url)) { badge(tab.id, '!', '#f0329a'); return log('not an http(s) page:', url); }
+  if (url && !/^https?:/.test(url)) { badge(tab.id, '!', '#ff453a'); return log('not an http(s) page:', url); }
   if (cmd === 'cut') return pick(tab);
   log('unknown command', cmd);
 }
