@@ -86,13 +86,13 @@ function claimStream(tab) {
   catch (e) { return { id, p: Promise.resolve({ err: e.message }) }; }
 }
 
-async function beginTake(tabId, rect, vw) {
+async function beginTake(tabId, rect, vw, vh) {
   const h = handles.get(tabId);
   if (!h) throw new Error('no capture handle — press ⌥C again on this tab');
   if (h.id !== tabId) throw new Error('that handle belonged to another tab — press ⌥C again');
   const streamId = await h.p;
   if (streamId?.err) { handles.delete(tabId); throw new Error(streamId.err); }
-  const res = await ask({ type: 'start', tabId, streamId, rect, vw });
+  const res = await ask({ type: 'start', tabId, streamId, rect, vw, vh });
   if (res?.error) { handles.delete(tabId); throw new Error(res.error); }
   handles.delete(tabId);          // a stream id is single-use
   return res;
@@ -270,7 +270,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     return true;
   }
   if (msg.type === 'record') {
-    beginTake(tabId, msg.rect, msg.vw)
+    beginTake(tabId, msg.rect, msg.vw, msg.vh)
       .then(() => {
         takes.set(tabId, { rect: msg.rect, vw: msg.vw, measure: msg.measure, page: msg.page, startedAt: Date.now() });
         badge(tabId, '●', '#ff3b30');

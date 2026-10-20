@@ -25,7 +25,7 @@ function teardown() {
   take = null;
 }
 
-async function start(tabId, streamId, rect, vw) {
+async function start(tabId, streamId, rect, vw, vh) {
   teardown();
   if (!MIME) throw new Error('this Chrome records no webm');
 
@@ -41,10 +41,14 @@ async function start(tabId, streamId, rect, vw) {
   await new Promise((res) => (video.videoWidth ? res() : (video.onloadedmetadata = res)));
 
   // The page measures in CSS pixels; the captured frame is in device pixels. Derive the scale from
-  // the frame itself rather than trusting the page's devicePixelRatio.
-  const scale = video.videoWidth / (vw || video.videoWidth);
-  const sx = Math.max(0, Math.round(rect.x * scale));
-  const sy = Math.max(0, Math.round(rect.y * scale));
+  // the frame itself rather than trusting the page's devicePixelRatio. The frame is sized to fill the
+  // max box above, so a window that isn't that shape arrives letterboxed: scale by the side that
+  // fits and step past the bars, or every clip is shifted and catches the recording ring.
+  const W = video.videoWidth, H = video.videoHeight;
+  const scale = vw && vh ? Math.min(W / vw, H / vh) : W / (vw || W);
+  const ox = vw && vh ? (W - vw * scale) / 2 : 0, oy = vw && vh ? (H - vh * scale) / 2 : 0;
+  const sx = Math.max(0, Math.round(ox + rect.x * scale));
+  const sy = Math.max(0, Math.round(oy + rect.y * scale));
   const sw = Math.max(2, Math.min(video.videoWidth - sx, Math.round(rect.w * scale)));
   const sh = Math.max(2, Math.min(video.videoHeight - sy, Math.round(rect.h * scale)));
 
@@ -113,7 +117,7 @@ chrome.runtime.onMessage.addListener((msg, _s, reply) => {
   if (msg.target !== 'offscreen') return;
   (async () => {
     if (msg.type === 'status') return { recording: !!take };
-    if (msg.type === 'start') return await start(msg.tabId, msg.streamId, msg.rect, msg.vw);
+    if (msg.type === 'start') return await start(msg.tabId, msg.streamId, msg.rect, msg.vw, msg.vh);
     if (msg.type === 'finish') return await finish(msg.discard);
     if (msg.type === 'stop') { teardown(); return { ok: true }; }
     return { ok: true };
